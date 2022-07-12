@@ -11,8 +11,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import pymysql
 
+from my_settings import DATABASES,SECRET_KEY
 from pathlib     import Path
-from my_settings import DATABASES, SECRET_KEY
 
 pymysql.install_as_MySQLdb()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
