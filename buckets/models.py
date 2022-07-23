@@ -11,14 +11,14 @@ class Bucket(TimeStamp):
     class Meta:
         db_table = 'buckets'
 
-class Bucket_auth(models.Model):
-    user   = models.ForeignKey('users.User', on_delete=models.CASCADE)
-    bucket = models.ForeignKey('buckets.Bucket', on_delete=models.CASCADE)
-    edit   = models.BooleanField()
-    public = models.BooleanField()
+# class Bucket_auth(models.Model):
+#     user   = models.ForeignKey('users.User', on_delete=models.CASCADE)
+#     bucket = models.ForeignKey('buckets.Bucket', on_delete=models.CASCADE)
+#     edit   = models.BooleanField()
+#     public = models.BooleanField()
     
-    class Meta:
-        db_table = 'bucket_auths'
+#     class Meta:
+#         db_table = 'bucket_auths'
         
 class Paper(TimeStamp):
     bucket           = models.ForeignKey('buckets.Bucket', on_delete=models.CASCADE)
