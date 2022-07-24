@@ -18,5 +18,5 @@ from django.urls import path, include
 
 
 urlpatterns = [
-    path('google', include('users.urls'))
+    path('login', include('users.urls'))
 ]
