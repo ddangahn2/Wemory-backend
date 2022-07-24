@@ -18,5 +18,9 @@ from django.urls import path, include
 
 
 urlpatterns = [
+<<<<<<< HEAD
     path('login', include('users.urls'))
+=======
+    path('google', include('users.urls'))
+>>>>>>> 87028a6 (add: google Login TEST1)
 ]
