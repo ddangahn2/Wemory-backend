@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import pymysql
 
-from my_settings import DATABASES,SECRET_KEY
+from my_settings import DATABASES,SECRET_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_PW
 from pathlib     import Path
 
 pymysql.install_as_MySQLdb()
@@ -25,6 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = SECRET_KEY
 
+GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_PW = GOOGLE_CLIENT_PW
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
