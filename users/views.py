@@ -2,7 +2,7 @@ import requests
 
 from django.shortcuts import redirect, render
 from django.views import View
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 
 
@@ -45,4 +45,7 @@ class GoogleAccessTokenView(View): # 발행된 인가코드를 통해 access tok
         return JsonResponse({'message' : user_info})
 
 
+class CheckView(View): 
+    def get(self, request):
+        return HttpResponse('welcome')
 
