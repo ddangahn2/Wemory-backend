@@ -10,7 +10,7 @@ class GoogleCallBackView(View): # 구글 인가 코드 발행.
     def __init__(self):
         self.google_auth_url    = "https://accounts.google.com/o/oauth2/v2/auth"
         self.access_token_uri   = "https://oauth2.googleapis.com/token"
-        self.redirect_uri       = "https://wemory.link/login/test"
+        self.redirect_uri       = "https://www.wemory.link/login/test"
         self.req_uri            = 'https://www.googleapis.com/oauth2/v3/userinfo'
         self.scope              = 'https://www.googleapis.com/auth/userinfo.profile + \
                                    https://www.googleapis.com/auth/userinfo.email'   # scope 여러 범위 설정하는 법.
@@ -23,7 +23,7 @@ class GoogleCallBackView(View): # 구글 인가 코드 발행.
 class GoogleAccessTokenView(View): # 발행된 인가코드를 통해 access token 발행, 유저정보 요청
     def __init__(self):
         self.access_token_uri = "https://oauth2.googleapis.com/token"
-        self.redirect_uri     = "https://wemory.link/login/test"
+        self.redirect_uri     = "https://www.wemory.link/login/test"
         self.req_uri          = 'https://www.googleapis.com/oauth2/v3/userinfo'
 
     def get(self, request):
