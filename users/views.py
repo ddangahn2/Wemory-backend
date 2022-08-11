@@ -10,6 +10,7 @@ from django.conf        import settings
 from django.db          import transaction
 
 from users.models import *
+from utilities.logindecorator import login_decorator
 
 class GoogleCallBackView(View): # 구글 인가 코드 발행.
     def __init__(self):
@@ -51,7 +52,6 @@ class GoogleSignUpView(View): # 발행된 인가코드를 통해 access token �
         
         # get_or_created 구문을 사용하고 싶은데 아직 플래그에 대한 이해도가 낮음.
         # if 문을 통해 DB에서 이메일을 비교해 리스폰스 값을 바꿈
-        
         # access token에 있는 이메일과 DB를 비교하여 이메일이 존재하면 웹페이지에서 사용할 토큰발급
         # 없다면 새로운 계정을 만들고 그에 대한 토큰을 발급.
 
@@ -61,6 +61,7 @@ class GoogleSignUpView(View): # 발행된 인가코드를 통해 access token �
             login_token     =  jwt.encode({'user_id' : user.id, 'exp': datetime.utcnow() + timedelta(hours= 2)}, settings.SECRET_KEY, settings.ALGORITHM)
 
             return JsonResponse({'Token' : login_token}, status = 200)
+        
         else:
             new_user = User.objects.create(  
                 name            = user_info['name'],
@@ -71,9 +72,9 @@ class GoogleSignUpView(View): # 발행된 인가코드를 통해 access token �
                 )
             
             login_token     =  jwt.encode({'user_id' : new_user.id, 'exp': datetime.utcnow() + timedelta(hours= 2)}, settings.SECRET_KEY, settings.ALGORITHM)
-
-            return JsonResponse({'Token': login_token}, status = 200)
-        
+            
+            return JsonResponse({'Token': login_token, 'message': '새로 가입'}, status = 200)
+  
 
 class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를 알아냄.
     def __init__(self):
@@ -97,32 +98,34 @@ class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를
         self.profile_image_URL = self.profile_image_URL + wemory_uuid
         
         return self.profile_image_URL
-
+    
+    @login_decorator
     def post(self, request):
         data = request.POST
+        user = request.user
         
         try:
             with transaction.atomic():
             
                 if "name" in data:
-                    User.objects.filter(google_email = data['google_email']).update(name = data['name'])
+                    User.objects.filter(id = user.id).update(name = data['name'])
                 
                 elif "day_of_birth" in data:
-                    User.objects.filter(google_email = data['google_email']).update(day_of_birth = data['day_of_birth'])
+                    User.objects.filter(id = user.id).update(day_of_birth = data['day_of_birth'])
 
                 elif "ordinal" in data:
-                    User.objects.filter(google_email = data['google_email']).update(ordinal = data['ordinal']) 
+                    User.objects.filter(id = user.id).update(ordinal = data['ordinal']) 
                 
                 elif "profile_image" in data:
                     profile_image_file = request.FILES.__getitem__('image')
                     profile_image_URL = self.image_upload(profile_image_file)
 
-                    User.objects.filter(google_email = data['google_email']).update(profile_image = profile_image_URL) 
+                    User.objects.filter(id = user.id).update(profile_image = profile_image_URL) 
                     
                 else:
                     return JsonResponse({'message' : '저장될 데이터가 없습니다.'}, status = 403)               
 
-            check_values = list(User.objects.filter(google_email = data['google_email']).values(
+            check_values = list(User.objects.filter(id = user.id).values(
                 "name",
                 "ordinal",
                 "day_of_birth",
@@ -134,9 +137,22 @@ class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를
         except:
             return JsonResponse({'message' : 'error' }, status = 404)
 
-    
-            
+        
 
+class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를 알아냄.
+    def post(self, request):
+
+        modify_user = User.objects.get(
+            google_email = request['email']
+        )
+        # 트랜젝션 걸자 정확하게 작동하게 하기 위해서
+        modify_user.name = request['name']
+        modify_user.day_of_birth = request['day_of_birth']
+        modify_user.ordinal = request['ordinal']
+        # 프로필 이미지 추가 구현. S3
+        modify_user.save()
+        
+        return JsonResponse({'message' : 'success'}) # 수정내용 보내기 
 
 
 class CheckView(View): 
