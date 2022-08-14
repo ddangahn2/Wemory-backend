@@ -1,3 +1,4 @@
+from unicodedata import name
 import requests
 
 from django.shortcuts import redirect, render
@@ -5,6 +6,7 @@ from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 
+from users.models import *
 
 class GoogleCallBackView(View): # 구글 인가 코드 발행.
     def __init__(self):
@@ -20,7 +22,7 @@ class GoogleCallBackView(View): # 구글 인가 코드 발행.
         return redirect(f"{self.google_auth_url}?client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={self.redirect_uri}&response_type=code&scope={self.scope}")
 
     
-class GoogleAccessTokenView(View): # 발행된 인가코드를 통해 access token 발행, 유저정보 요청
+class GoogleSignUpView(View): # 발행된 인가코드를 통해 access token 발행, 유저정보 요청
     def __init__(self):
         self.access_token_uri = "https://oauth2.googleapis.com/token"
         self.redirect_uri     = "https://www.wemory.link/login/test"
@@ -42,7 +44,30 @@ class GoogleAccessTokenView(View): # 발행된 인가코드를 통해 access tok
 
         user_info    = requests.get(self.req_uri , headers = headers).json()
 
-        return JsonResponse({'message' : user_info})
+        new_user = User.objects.create(
+            name = user_info['name'],
+            picture = user_info['picture'],
+            google_email = user_info['email'],
+            profile_image = user_info['picture']
+        )
+
+        return JsonResponse({'message' : 'success'})
+
+class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를 알아냄.
+    def post(self, request):
+
+        modify_user = User.objects.get(
+            google_email = request['email']
+        )
+        # 트랜젝션 걸자 정확하게 작동하게 하기 위해서
+        modify_user.name = request['name']
+        modify_user.day_of_birth = request['day_of_birth']
+        modify_user.ordinal = request['ordinal']
+        # 프로필 이미지 추가 구현. S3
+        modify_user.save()
+        
+        return JsonResponse({'message' : 'success'}) # 수정내용 보내기 
+
 
 
 class CheckView(View): 
