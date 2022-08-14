@@ -65,7 +65,6 @@ class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를
         modify_user.ordinal = request['ordinal']
         # 프로필 이미지 추가 구현. S3
         modify_user.save()
-        
         return JsonResponse({'message' : 'success'}) # 수정내용 보내기 
 
 
