@@ -123,7 +123,7 @@ class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를
                     User.objects.filter(id = user.id).update(profile_image = profile_image_URL) 
                     
                 else:
-                    return JsonResponse({'message' : '저장될 데이터가 없습니다.'}, status = 403)               
+                    return JsonResponse({'message' : 'No data contents to be modified.'}, status = 403)               
 
             check_values = list(User.objects.filter(id = user.id).values(
                 "name",
@@ -135,24 +135,8 @@ class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를
             return JsonResponse({'message' : check_values }, status = 200)
         
         except:
-            return JsonResponse({'message' : 'error' }, status = 404)
-
-        
-
-class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를 알아냄.
-    def post(self, request):
-
-        modify_user = User.objects.get(
-            google_email = request['email']
-        )
-        # 트랜젝션 걸자 정확하게 작동하게 하기 위해서
-        modify_user.name = request['name']
-        modify_user.day_of_birth = request['day_of_birth']
-        modify_user.ordinal = request['ordinal']
-        # 프로필 이미지 추가 구현. S3
-        modify_user.save()
-        
-        return JsonResponse({'message' : 'success'}) # 수정내용 보내기 
+            return JsonResponse({'message' : 'ModifyView Error' }, status = 404)
+ 
 
 
 class CheckView(View): 
