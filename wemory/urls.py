@@ -21,4 +21,5 @@ from users.views import *
 urlpatterns = [
     path('login', include('users.urls')),
     path('', CheckView.as_view()),
+    path('buckets', include('buckets.urls'))
 ]
