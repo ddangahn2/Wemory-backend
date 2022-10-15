@@ -5,6 +5,8 @@ from django.views import View
 from buckets.models import * 
 # Create your views here.
 
+<<<<<<< HEAD
+=======
 class BucketView(View): # 데코레이터 달자
     def get(self, requset):
         title = requset.GET.get
@@ -23,3 +25,4 @@ class BucketView(View): # 데코레이터 달자
 
     def delete(self, request):
         delete_bucket = Bucket.objects.delete(bucket_id = request['bucket_id'])
+>>>>>>> 4cd12193e17f963b96d20b2b57fb59f9d1a687ae
