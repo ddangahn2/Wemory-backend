@@ -1,3 +1,4 @@
+from email.policy import default
 from django.db import models
 
 from utilities.timestamp import TimeStamp
@@ -7,6 +8,7 @@ class Bucket(TimeStamp):
     user    = models.ForeignKey('users.User', on_delete=models.CASCADE)
     ordinal = models.ForeignKey('users.Ordinal', on_delete=models.CASCADE)
     public  = models.BooleanField()
+    background_color = models.ForeignKey('buckets.Background_color', on_delete= models.CASCADE, default = 1)
     
     class Meta:
         db_table = 'buckets'
