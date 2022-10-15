@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import pymysql
 
-from my_settings import DATABASES,SECRET_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_PW
+from my_settings import DATABASES,SECRET_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_PW, ALGORITHM, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 from pathlib     import Path
 
 pymysql.install_as_MySQLdb()
@@ -29,6 +29,9 @@ SECRET_KEY = SECRET_KEY
 
 GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_PW = GOOGLE_CLIENT_PW
+
+AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -154,3 +157,6 @@ CORS_ALLOW_HEADERS = (
     'x-csrftoken',
     'x-requested-with',    		
 )
+
+# JWT
+ALGORITHM = ALGORITHM
