@@ -106,24 +106,26 @@ class ModifyView(View): # 토큰을 발급함. 토큰을 통해 유저 정보를
         
         try:
             with transaction.atomic():
-            
+                
+                if data == {}:
+                    return JsonResponse({'message' : 'No data contents to be modified.'}, status = 403) 
+                
                 if "name" in data:
                     User.objects.filter(id = user.id).update(name = data['name'])
                 
-                elif "day_of_birth" in data:
+                if "day_of_birth" in data:
                     User.objects.filter(id = user.id).update(day_of_birth = data['day_of_birth'])
 
-                elif "ordinal" in data:
+                if "ordinal" in data:
                     User.objects.filter(id = user.id).update(ordinal = data['ordinal']) 
                 
-                elif "profile_image" in data:
+                if "profile_image" in data:
                     profile_image_file = request.FILES.__getitem__('image')
                     profile_image_URL = self.image_upload(profile_image_file)
 
                     User.objects.filter(id = user.id).update(profile_image = profile_image_URL) 
                     
-                else:
-                    return JsonResponse({'message' : 'No data contents to be modified.'}, status = 403)               
+                              
 
             check_values = list(User.objects.filter(id = user.id).values(
                 "name",
