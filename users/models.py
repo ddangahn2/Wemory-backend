@@ -14,7 +14,7 @@ class User(TimeStamp):
         db_table = 'users'
         
 class Ordinal(models.Model):
-    ordinal = models.IntegerField(max_length=4, unique=True)
+    ordinal = models.IntegerField(unique=True)
     
     class Meta:
         db_table = 'ordinals'

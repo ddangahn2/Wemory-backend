@@ -7,6 +7,7 @@ class Bucket(TimeStamp):
     user    = models.ForeignKey('users.User', on_delete=models.CASCADE)
     ordinal = models.ForeignKey('users.Ordinal', on_delete=models.CASCADE)
     public  = models.BooleanField()
+    background_color = models.ForeignKey('bucket.Background_color', on_delete= models.CASCADE)
     
     class Meta:
         db_table = 'buckets'
