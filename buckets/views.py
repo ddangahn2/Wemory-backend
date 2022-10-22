@@ -10,12 +10,12 @@ from users.models import *
 from utilities.logindecorator import login_decorator
 
 class BucketListView(View): 
-    @login_decorator
+    # @login_decorator
     def get(self, request):
         
         title   = request.GET.get('title', None)
         ordinal = request.GET.get('ordinal', None)
-        writer = request.GET.get('writer', None)
+        writer  = request.GET.get('writer', None)
         # public  = request.GET.get('public', True)
 
         sorting = request.GET.get('order-by', 'latest')
@@ -23,8 +23,8 @@ class BucketListView(View):
         limit   = int(request.GET.get('limit', 5))
         
         sorting_dict = {
-            'latest' : '-created_at',
-            'old' : 'created_at'
+            'latest': '-created_at',
+            'old'   : 'created_at'
         }
         
         # TODO : 필터셋 , q객체 다써서 만들어보기 // 추가구현 가능하면 ElasticSearch 사용, 깃수별, search(타이틀, 생성자)
@@ -60,16 +60,16 @@ class BucketListView(View):
             user    = request.user
 
             ordinal_id = user.ordinal_id
-            ordinal = Ordinal.objects.get(id = ordinal_id)
+            ordinal    = Ordinal.objects.get(id = ordinal_id)
             
             background_color_id = data['background_color']
-            background_color = Background_color.objects.get(id = background_color_id)
+            background_color    = Background_color.objects.get(id = background_color_id)
             
             Bucket.objects.create(
-                title   = data['title'],
-                user    = user,
-                ordinal = ordinal,
-                public = data['public'],
+                title            = data['title'],
+                user             = user,
+                ordinal          = ordinal,
+                public           = data['public'],
                 background_color = background_color
             )
 
