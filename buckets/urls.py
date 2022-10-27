@@ -3,5 +3,6 @@ from django.urls import path
 from buckets.views import *
 
 urlpatterns = [
-    path('', BucketListView.as_view()),
+    path('/member', MemberBucketListView.as_view()),
+    path('/nonmember', NonmemberBucketListView.as_view()),
 ]   

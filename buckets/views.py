@@ -9,14 +9,12 @@ from users.models import *
 
 from utilities.logindecorator import login_decorator
 
-class BucketListView(View): 
-    # @login_decorator
+class MemberBucketListView(View): 
+    @login_decorator
     def get(self, request):
-        
         title   = request.GET.get('title', None)
         ordinal = request.GET.get('ordinal', None)
         writer  = request.GET.get('writer', None)
-        # public  = request.GET.get('public', True)
 
         sorting = request.GET.get('order-by', 'latest')
         offset  = int(request.GET.get('offset', 0))
@@ -27,7 +25,7 @@ class BucketListView(View):
             'old'   : 'created_at'
         }
         
-        # TODO : 필터셋 , q객체 다써서 만들어보기 // 추가구현 가능하면 ElasticSearch 사용, 깃수별, search(타이틀, 생성자)
+        #TODO : 딕셔너리로 필터셋 구현
         q = Q()
         if title:
             q &= Q(title=title)
@@ -35,10 +33,6 @@ class BucketListView(View):
             q &= Q(ordinal=ordinal)
         if writer:
             q &= Q(user__name=writer)
-        # if :
-        #     if public == true:
-        #     else:
-        #         q &= Q(public=public)
                 
         filtered_buckets = Bucket.objects.filter(q)
         buckets          = filtered_buckets.order_by(sorting_dict[sorting])[offset:offset+limit] 
@@ -76,7 +70,45 @@ class BucketListView(View):
             return JsonResponse({'message' : 'CREATED'}, status=201)
         
         except Bucket.DoesNotExist:
-            return JsonResponse({'message' : 'BUCKET_NOT_EXIST'}, status=404)  
+            return JsonResponse({'message' : 'BUCKET_NOT_EXIST'}, status=404) 
+        
+class NonmemberBucketListView(View): 
+    def get(self, request):
+        title   = request.GET.get('title', None)
+        ordinal = request.GET.get('ordinal', None)
+        writer  = request.GET.get('writer', None)
+        public  = request.GET.get('public', True)
+
+        sorting = request.GET.get('order-by', 'latest')
+        offset  = int(request.GET.get('offset', 0))
+        limit   = int(request.GET.get('limit', 5))
+        
+        sorting_dict = {
+            'latest': '-created_at',
+            'old'   : 'created_at'
+        }
+        
+        q = Q()
+        q &= Q(public=True)
+        if title:
+            q &= Q(title=title)
+        if ordinal:
+            q &= Q(ordinal=ordinal)
+        if writer:
+            q &= Q(user__name=writer)
+                
+        filtered_buckets = Bucket.objects.filter(q)
+        buckets          = filtered_buckets.order_by(sorting_dict[sorting])[offset:offset+limit] 
+        
+        bucket_list = [{
+            'id'     : bucket.id,
+            'title'  : bucket.title,
+            'user'   : bucket.user_id,
+            'ordinal': bucket.ordinal_id,
+            'public' : bucket.public
+        } for bucket in buckets]
+        
+        return JsonResponse({'result' : bucket_list}, status=200)
         
 # TODO : PaperView(BucketDetailView)
 # class BucketDetailView(View):
