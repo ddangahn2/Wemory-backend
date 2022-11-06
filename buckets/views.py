@@ -7,6 +7,8 @@ from django.db.models import Q
 from buckets.models import *
 from users.models import *
 
+from datetime import datetime
+
 from utilities.logindecorator import login_decorator
 
 class BucketListView(View): 
@@ -78,62 +80,124 @@ class BucketListView(View):
         except Bucket.DoesNotExist:
             return JsonResponse({'message' : 'BUCKET_NOT_EXIST'}, status=404)  
         
-# TODO : PaperView(BucketDetailView)
-# class BucketDetailView(View):
-#     def get(self, request, bucket_id):
-#         try:
-#             bucket = Bucket.objects.get(id = bucket_id)
-#             papers = Paper.objects.get(bucket = bucket_id)
+class BucketPaperView(View):
+    # 버킷 아이디 받으면 버킷안에 페이퍼 데이터 모두 주기
+    @login_decorator
+    def get(self, request):
+        user   = request.user
+        data   = json.loads(request.body)
+        bucket = Bucket.objects.get(id = data['bucket_id'])
 
-#             result = {
-#                 'id'           : bucket.id,
-#                 'title'         : bucket.title,
-#                 'ordinal'        : bucket.ordinal,
-#                 'public'       : bucket.public,
-#                 'papers' : [{
-#                     'paper_id' : paper.id,
-#                     'user'      : {
-#                         'name': paper.user.name,
-#                         'google_email'     : paper.user.email
-#                         },
-#                     'content'   : paper.content,
-#                     'created_at': paper.created_at
-#                 }for paper in papers.all()]
-#             }
-        
-#             return JsonResponse({'result' : result}, status=200)
-        
-#         except Bucket.DoesNotExist:
-#             return JsonResponse({'message' : 'BUCKET_NOT_EXIST'}, status=404)
+        if user.admin.title == 'guest' and paper.bucket.public==0:
+            return JsonResponse({'message' : 'permission denied'})
+        else:
+            papers = bucket.paper_set.all()
+
+            result = [{
+                "paper_id"         : paper.id,
+                "content"          : paper.content,
+                "x_axis"           : paper.x_axis,
+                "y_axis"           : paper.y_axis,
+                "background_color" : paper.background_color.color_code,
+                "font"             : paper.font.name,
+                "font_color"       : paper.font_color.color_code,
+                "font_size"        : paper.font_size.size
+            } for paper in papers]
+
+            return JsonResponse({'result' : result}, status = 200)
+
+class PaperView(View):    
+    # 페이퍼 생성
+    @login_decorator
+    def post(self, request):
+        user   = request.user
+        data   = request.POST
+        images = request.FILES.getlist('image')
+
+        paper = Paper.objects.create(
+            bucket           = Bucket.objects.get(id = data['bucket_id']),
+            user             = User.objects.get(id = user.id),
+            content          = data['content'],
+            x_axis           = data['x_axis'],
+            y_axis           = data['y_axis'],
+            background_color = data['background_color'],
+            font             = data['font'],
+            font_color       = data['font_color'],
+            font_size        = data['font_size']
+        )
+        image_list = []
+
+        for image in images:
+            image_url = self.image_upload(image)
+            image_list.append(Paper_image(paper = paper, image_url = image_url))
+
+        Paper_image.objects.bulk_create(image_list)
     
-    # TODO : Paper 생성
-    # @check_token
-    # def post(self, request, bucket_id):
-    #     try:
-    #         data    = json.loads(request.body)
-    #         bucket = Bucket.objects.get(id = bucket_id)
-    #         user    = request.user
+    # 페이지 수정 (아직 bucket쪽 로직 수정해야함 + 프론트쪽 미구현)
+    @login_decorator
+    def patch(self, request):
+        user  = request.user
+        data  = request.POST
+        paper = Paper.objects.get(id = data['id'])
+        # 지우는 이미지
+        del_images = request.FILES.getlist('del_image')
+        # 추가시키는 이미지
+        add_images = request.FILES.getlist('add_image')
 
-    #         Paper.objects.create(
-    #             user    = user,
-    #             bucket = bucket,
-    #             content = data['content']
-    #         )
-
-    #         return JsonResponse({'message' : 'CREATED'}, status=201)
+        del_image_list = []
+        add_image_list = []
         
-    #     except Bucket.DoesNotExist:
-    #         return JsonResponse({'message' : 'BUCKET_NOT_EXIST'}, status=404)        
-    
-    # TODO : Paper 삭제
-    # @check_token
-    # def delete(self, request, bucket_id):
-    #     paper_id = request.GET.get('paper-id', None)
-    #     user      = request.user
-    #     paper   = Paper.objects.filter(id = paper_id, bucket_id = bucket_id ,user = user)
+        # TODO : atomic 구현
+        if paper.user.id == user.id:
+            paper.content          = data['condant']
+            paper.x_axis           = data['x_axis']
+            paper.y_axis           = data['y_axis']
+            paper.background_color = data['background_color']
+            paper.font             = data['font']
+            paper.font_color       = data['font_color']
+            paper.font_size        = data['font_size']
+            
+            paper.save()
 
-    #     if not paper.exists():
-    #         return JsonResponse({'message' : 'PAPER_NOT_EXIST'}, status = 404)
-        
-    #     paper.delete()
-    #     return JsonResponse({'message' : 'SUCCESS'}, status = 204)    
+            paper_images = Paper_image.objects.get(paper = paper)
+
+
+            # 뺄 이미지
+            for del_image in del_images:
+                Paper_image.objects.get(image_url = del_image).delete()
+            # 여기는 bulk delete 가 없어서 깡 delete 로 구현
+            
+            # 더할 이미지
+            for image in images:
+                image_url = self.image_upload(image)
+                add_image_list.append(Paper_image(paper = paper, image_url = image_url))
+
+            Paper_image.objects.bulk_create(add_image_list)
+            
+        else:
+            return JsonResponse({'message' : 'permission denied'}, status = 400)
+
+    # 페이지 삭제
+    @login_decorator
+    def delete(self, request):
+        user = request.user
+        data = json.loads(request.body)
+
+        paper = Paper.objects.get(id = data['id'])
+        if paper.user.id == user.id:
+            paper.delete()
+        else:
+            return JsonResponse({'message' : 'permission denied'}, status = 400)
+
+class PaperLikeView(View):
+    # 좋아요 기능
+    @login_decorator
+    def post(self,request):
+        user  = request.user
+        data  = json.loads(request.body)
+        paper = Paper.objects.get(id = data['paper_id'])
+
+        paper_like, is_created =  Paper_Like.objects.get_or_create(user = user, paper = paper)
+
+        if not is_created:
+            paper_like.delete()
