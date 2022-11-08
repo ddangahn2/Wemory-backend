@@ -74,14 +74,13 @@ class MemberBucketListView(View):
         
 class NonmemberBucketListView(View): 
     def get(self, request):
-        title   = request.GET.get('title', None)
         ordinal = request.GET.get('ordinal', None)
-        writer  = request.GET.get('writer', None)
+        search = request.GET.get('search', None)
         public  = request.GET.get('public', True)
 
         sorting = request.GET.get('order-by', 'latest')
         offset  = int(request.GET.get('offset', 0))
-        limit   = int(request.GET.get('limit', 5))
+        limit   = int(request.GET.get('limit', 20))
         
         sorting_dict = {
             'latest': '-created_at',
@@ -90,21 +89,21 @@ class NonmemberBucketListView(View):
         
         q = Q()
         q &= Q(public=True)
-        if title:
-            q &= Q(title=title)
         if ordinal:
             q &= Q(ordinal=ordinal)
-        if writer:
-            q &= Q(user__name=writer)
-                
+        if search:
+            q &= Q(title=search)|Q(user__name=search)
+        
         filtered_buckets = Bucket.objects.filter(q)
-        buckets          = filtered_buckets.order_by(sorting_dict[sorting])[offset:offset+limit] 
+        buckets          = filtered_buckets.order_by(sorting_dict[sorting])[offset:offset+limit]
         
         bucket_list = [{
             'id'     : bucket.id,
             'title'  : bucket.title,
-            'user'   : bucket.user_id,
+            'user'   : bucket.user.name,
             'ordinal': bucket.ordinal_id,
+            'mix' : f'{bucket.ordinal_id}기 {bucket.user.name}',
+            'background_color' : bucket.background_color.color_code,
             'public' : bucket.public
         } for bucket in buckets]
         
